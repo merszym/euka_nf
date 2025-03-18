@@ -1,53 +1,38 @@
-# Analysis of sedimentary ancient DNA using BLAST and MEGAN
+# Analysis of sedimentary ancient DNA using euka
 
-This repository contains a nextflow-based implementation of the BLAST+MEGAN-centered workflow described in Slon et al, 2017 to analyze ancient mitochondrial DNA (mtDNA) from archaeological sediments.
+This repository contains a nextflow-based implementation of a euka-centered workflow to analyze ancient mitochondrial DNA (mtDNA) from archaeological sediments.
 
-The pipeline was created to benchmark [quicksand](github.com/mpieva/quicksand), it is *NOT* the exact workflow described in Slon et al, 2017. I streamlined and updated some processes and output-files to make it more comparable to quicksand. Also the summary-table headers differ a bit.
+The pipeline was created to benchmark [quicksand](github.com/mpieva/quicksand). I created this pipeline to analyze multiple files with euka in parallel and create a minimal report-file.
 
 ## Documentation
 
 The pipeline consists of 5 steps:
 
-1. Reduce input sequences by removing identical duplicates (keep only the first). Keep only sequences that are seen at least twice (by default)
-2. Run BLAST
-3. RUN MEGAN and export all assigned reads on the family level
-4. map the family-sequences against all genomes in the reference-database
-5. filter, deduplicate and analyze the alignments for ancient DNA damage
+1. Convert BAM to FASTQ
+2. Run euka
+3. Normalize taxonomy (report order and family)
 
 ### Run the pipeline
 
 Run the pipeline with nextflow >= v22.10 and singularity installed.
 
 ```
-nextflow run merszym/blastmegan_nf \
+nextflow run merszym/euka_nf \
     --split DIR  
-    --genomes DIR
-    --database FASTA
-    --acc2taxid ABIN
+    --euka_dir DIR
+    --taxonomy FASTA
+    -profile singularity
 ```
 
 ### Available Flags
 ```
 --split     DIR     // a folder containing bam-files (required)
---database  PATH    // the fasta files used as BLAST database (required)
---acc2taxid PATH    // the MEGAN .abin file used for the taxonomy (required)
---genomes   DIR     // folder with reference genomes (use the quicksand-build genomes directory) (required)
---doublestranded    // calculate damage patterns based on C-T and G-A instead of only C-T (like in single stranded libs)
-
---pseudouniq_filterflag INT // samtools filter flag. 1=unpaired, 4=unmapped, 5=both. (default: 5)
---pseudouniq_minlen     INT // samtools length filter (default:35)
---pseudouniq_mindup     INT // keep reads that are duplicated at least N times (default: 2)
-
---rma_sup  INT    // blast2rma flag, min-support (default:3)
---rma_supp FLOAT  // blast2rma flag, min-support percent (default: 0.1)
---rma_ms   INT    // blast2rma flag, min-support (default:35)  
-
---mapbwa_quality_cutoff INT  // bwa minimal quality cutoff (default: 25)
---save_deaminated            // save the deaminated reads (term1 and term3)
+--euka_dir  DIR     // the folder containing the euka database (required)
+--taxonomy  DIR     // a folder containig the names.dmp and nodes.dmp files from NCBI (required)
 ```
 
 ### Acknowledgments
 
-The pipeline was developed by [Frederic Romagne](https://github.com/frederic-romagne) and described in Slon et al. (2017).
+See the euka tool 
 
-> Viviane Slon et al., _Neandertal and Denisovan DNA from Pleistocene sediments._ Science356,605-608 (2017).[10.1126/science.aam9695](https://doi.org/10.1126/science.aam9695)
+> Nicola Vogel et al., _euka: Robust tetrapodic and arthropodic taxa detection from modern and ancient environmental DNA using pangenomic reference graphs._ Methods in Ecology and Evolution, 14, 2717–2727 (2023).[10.1111/2041-210X.14214](https://doi.org/10.1111/2041-210X.14214)
