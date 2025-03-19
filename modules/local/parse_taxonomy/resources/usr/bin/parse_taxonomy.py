@@ -3,7 +3,7 @@
 import sys
 import json
 
-def get_names_dict(names_file):
+def get_names_dict(names_file, nodes):
     taxid_names_dict = {}
     name_taxid_dict = {}
     
@@ -12,7 +12,19 @@ def get_names_dict(names_file):
             if 'scientific name' in line:
                 taxid,name,_ = line.strip().split("\t|\t", 2)
                 taxid_names_dict[int(taxid)]=name
-                name_taxid_dict[name]=int(taxid)
+                if name in name_taxid_dict:
+                    #names are not unique (e.g. Proboscidea is elephants and a plant...)
+                    #if duplicated entry, check if the mammals are in the taxonomy
+                    taxid_old = name_taxid_dict[name]
+                    ancestors_old = traverse_tree(taxid_old, nodes)
+                    if 40674 in ancestors_old: # mammals are taxid 40674
+                        continue
+                    else:
+                        ancestors_new = traverse_tree(taxid, nodes)
+                        if 40674 in ancestors_new:
+                            name_taxid_dict[name]=int(taxid)
+                else:
+                    name_taxid_dict[name]=int(taxid)
     return taxid_names_dict, name_taxid_dict
 
 def get_nodes_dict(taxonomy_file):
@@ -62,8 +74,8 @@ if __name__ == '__main__':
     namesfile = sys.argv[2]
     taxa = sys.argv[3]
     
-    names, names_taxid_dict = get_names_dict(namesfile)
     nodes = get_nodes_dict(nodefile)
+    names, names_taxid_dict = get_names_dict(namesfile, nodes)
 
     final_json = {}
     for taxon in taxa.split(','):
