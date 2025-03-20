@@ -3,6 +3,7 @@ process VGAN_EUKA {
         'https://depot.galaxyproject.org/singularity/vgan:3.0.0--h9ee0642_0' :
         'quay.io/biocontainers/vgan:3.0.0--h9ee0642_0' }"
     tag "$meta.id"
+    maxForks $params.threads
 
     input:
     tuple val(meta), path(fasta)
