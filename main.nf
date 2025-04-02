@@ -1,5 +1,6 @@
 #!/usr/bin/env nextflow
 
+include { FRED_PSEUDOUNIQ } from './modules/local/fred_remove_duplicates'
 include { SAMTOOLS_FASTQ } from './modules/local/samtools_fasta'
 include { VGAN_EUKA } from './modules/local/vgan_euka'
 include { PARSE_TAXONOMY } from './modules/local/parse_taxonomy'
@@ -18,12 +19,26 @@ workflow {
   // add a fake meta
   ch_split.map{it -> [['sample': it.baseName, 'id':it.baseName], it] }.set{ ch_split }
 
+  //
+  // 0. Remove Duplicates
+  //
+
+  FRED_PSEUDOUNIQ(ch_split)
+
+  ch_pseudouniq = FRED_PSEUDOUNIQ.out.pseudouniq
+
+  ch_pseudouniq.map{meta, bam, stats -> 
+      [
+          meta+stats.splitCsv(sep:'\t', header:true).first(),
+          bam
+      ]
+  }.set{ ch_pseudouniq }
 
   //
   // 1. Convert bam to fasta (for euka)
   //
 
-  SAMTOOLS_FASTQ(ch_split)
+  SAMTOOLS_FASTQ(ch_pseudouniq)
 
   ch_fasta = SAMTOOLS_FASTQ.out.fastq
   ch_versions = ch_versions.mix(SAMTOOLS_FASTQ.out.versions.first())
@@ -103,6 +118,10 @@ ch_extracted_fasta_valid.collectFile(
   storeDir:'.',
   seed:[
       "RG",
+      "RawReads",
+      "ReadsL35",
+      "FinalNoPCRDups",
+      "AvrgTimesSeen",
       "FinalReads",
       "EukaTaxa",
       "Order",
@@ -111,6 +130,10 @@ ch_extracted_fasta_valid.collectFile(
   ){
     [
       it[0].id,
+      it[0]['all_seqs'],
+      it[0]["seqs>=35"],
+      it[0]['final_noPCRdups_seqs'],
+      it[0]['avrg_times_seen_final'],
       it[1]['Number_of_reads'],
       it[1]['#Taxa'],
       it[2]['order'],
