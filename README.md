@@ -6,11 +6,12 @@ The pipeline was created to benchmark [quicksand](github.com/mpieva/quicksand). 
 
 ## Documentation
 
-The pipeline consists of 5 steps:
+The pipeline consists of 4 steps:
 
-1. Convert BAM to FASTQ
-2. Run euka
-3. Normalize taxonomy (report order and family)
+1. Deduplicate BAM (by sequence)
+2. Convert BAM to FASTQ
+3. Run euka
+4. Normalize taxonomy (report order and family)
 
 ### Run the pipeline
 
@@ -31,7 +32,7 @@ nextflow run merszym/euka_nf \
 --taxonomy  DIR     // a folder containig the names.dmp and nodes.dmp files from NCBI (required)
 ```
 
-### Acknowledgments
+### References
 
 See the euka tool 
 
